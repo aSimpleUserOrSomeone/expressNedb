@@ -121,6 +121,43 @@ app.get('/list&id=:id', (req, res) => {
     })
 })
 
+
+const usersDB = new Datastore({
+    filename: 'users.db',
+    autoload: true
+})
+
+app.post('/registry', (req, res) => {
+    const actionType = req.body.type
+    const username = req.body.username
+    const password = req.body.password
+
+    // if([actionType, username, password].some((el) => typeof el != "undefined")) {
+    //     res.json({error: "Not all parameters were provided"})
+    // }
+
+
+    if (actionType === "register") {
+        usersDB.findOne({ username: username }, (doc) => {
+            if (doc) {
+                res.json({ error: "USEREXISTS" })
+            } else {
+                const date = new Date().toLocaleString()
+                const data = { username: username, password: password, date: date }
+                usersDB.insert(data)
+            }
+        })
+    } else if (actionType === "remove") {
+        usersDB.remove({ username: username })
+    } else if (actionType === "get") {
+        usersDB.find({}, (data) => {
+            res.json(data)
+        })
+    } else {
+        res.json({ error: "UNKNOWNACTION" })
+    }
+})
+
 app.listen(port, () => {
     console.log(`Server listening on port: ${port}`)
 })
