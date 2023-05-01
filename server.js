@@ -3,9 +3,15 @@ const hbs = require('express-handlebars')
 const path = require('path')
 const fs = require('fs')
 const Datastore = require('nedb')
+const cors = require("cors")
 
 const app = express()
 const port = 5500
+
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(express.static('static'))
 
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'hbs')
@@ -28,10 +34,6 @@ app.engine('hbs', hbs.engine({
         }
     }
 }));
-
-app.use(express.urlencoded({ extended: true }))
-app.use(express.static('static'))
-
 
 const cars = new Datastore({
     filename: 'kolekcja.db',
@@ -97,13 +99,6 @@ app.post("/edit", (req, res) => {
     })
 })
 
-app.post("/list", (req, res) => {
-    console.log(req.body)
-    // cars.update({}, (err, docs) => {
-
-    // })
-})
-
 app.get("/list", (req, res) => {
     cars.find({}, (err, docs) => {
         docs.forEach((e, i) => e.tmp = 'temporary')
@@ -119,6 +114,46 @@ app.get('/list&id=:id', (req, res) => {
             res.render('list.hbs', { la: true, docs: docs })
         })
     })
+})
+
+const usersDB = new Datastore({
+    filename: 'users.db',
+    autoload: true
+})
+
+app.post('/registry', (req, res) => {
+    console.log(req.body);
+
+    const actionType_ = req.body.type
+    const username_ = req.body.username
+    const password_ = req.body.password
+
+    if (actionType_ === "register") {
+
+        usersDB.findOne({ username: username_ }, (err, doc) => {
+            console.log("doc", doc);
+            if (doc) {
+                return res.json({ error: "USEREXISTS" })
+            }
+
+            const date_ = new Date().toLocaleString()
+            const data = { username: username_, password: password_, date: date_ }
+            usersDB.insert(data, (err, doc) => {
+
+                usersDB.find({}, (data) => {
+                    res.json(data)
+                })
+            })
+        })
+    } else if (actionType_ === "remove") {
+        usersDB.remove({ username: username_ }, false, (err, number) => {
+            usersDB.find({}, (err, docs) => {
+                res.json(docs)
+            })
+        })
+    } else {
+        res.json({ error: "UNKNOWNACTION" })
+    }
 })
 
 app.listen(port, () => {
