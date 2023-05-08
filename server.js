@@ -140,8 +140,8 @@ app.post('/registry', (req, res) => {
             const data = { username: username_, password: password_, date: date_ }
             usersDB.insert(data, (err, doc) => {
 
-                usersDB.find({}, (data) => {
-                    res.json(data)
+                usersDB.find({}, (err, docs) => {
+                    res.json(docs)
                 })
             })
         })
