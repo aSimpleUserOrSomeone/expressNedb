@@ -136,7 +136,7 @@ app.post('/registry', (req, res) => {
                 return res.json({ error: "USEREXISTS" })
             }
 
-            const date_ = new Date().toLocaleString()
+            const date_ = new Date().toLocaleString("pl-PL")
             const data = { username: username_, password: password_, date: date_ }
             usersDB.insert(data, (err, doc) => {
 
